@@ -23,7 +23,7 @@ ser.flush()
 cnnt = PiIotConnect(location, web_sockets, CONNECTION_STRING)
 
 while True:
-    cnnt.pi_iothub_data_transfer():
+    cnnt.pi_iothub_data_transfer(location, CONNECTION STRING):
  
     if __name__ == '__main__':
         print("Press Ctrl-c to stop")
