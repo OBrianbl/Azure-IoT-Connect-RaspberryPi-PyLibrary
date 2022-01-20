@@ -22,7 +22,6 @@ ser.flush()
 while True:
     pi_iothub_data_transfer(location, CONNECTION STRING):
  
-
     if __name__ == '__main__':
         print("Press Ctrl-c to stop")
         pi_iothub_data_transfer()
