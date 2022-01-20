@@ -20,9 +20,10 @@ CONNECTION_STRING = "<<CHANGE CONNECTION STRING TO ONE PROVIDED FROM AZURE IOT H
 ser=serial.Serial("/dev/ttyACM0",9600)
 ser.flush()
 
+cnnt = PiIotConnect(location, web_sockets, CONNECTION_STRING)
 
 while True:
-    pi_iothub_data_transfer(location, CONNECTION STRING):
+    cnnt.pi_iothub_data_transfer():
  
     if __name__ == '__main__':
         print("Press Ctrl-c to stop")

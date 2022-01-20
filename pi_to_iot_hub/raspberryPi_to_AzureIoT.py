@@ -14,8 +14,8 @@ import json
 import datetime
 
 
-from tempfile import tempdir
-from main import CONNECTION_STRING
+# from tempfile import tempdir
+# from main import CONNECTION_STRING
 
 
 class PiIotConnect:
@@ -52,9 +52,12 @@ class PiIotConnect:
         print("iothub-client-initiated")
         return client
 
-
-
     def read_arduino_data(self):
+        """
+        Read data in from Arduino, extract and return pertinent information sensor #, temperature,
+        and time stamp of data ingestion.
+        
+        """
         self.date_time_str = datetime.datetime.now().isoformat()
         tmp = str(ser.readline().rstrip(),"utf-8")
         tmp = tmp.rstrip(tmp[-1])
@@ -64,12 +67,14 @@ class PiIotConnect:
 
     def structure_payload(self, time, dspl, temp):
         """
-        
+        Structure the message in JSON to send to Azure IoT Hub.
+
         param: msg: dictionary of time stamp, dspl (i.e. sensor type -- 1,2,3,etc), and temperature 
                     from sensor restructured as JSON
-        type: msg: json 
+        type: msg: JSON 
 
         """
+        self.date_time_str, self.sensor, self.temp = read_arduino_data()
         msg = {"time" : time, "dspl" : dspl, "temp" : temp}
         msg = Message(json.dumps(msg))
         msg.content_encoding = "utf-8"
@@ -79,6 +84,7 @@ class PiIotConnect:
     def pi_iothub_data_transfer(self):
         """
         Connect to Azure IoT Hub and send sensor data from Raspberry Pi to IoT Hub. 
+
         """
         print("telemetry function started")                                                                                                                                                                                                                                                               
         try:
@@ -86,8 +92,8 @@ class PiIotConnect:
             print("sending data to IoT Hub, plress Ctrl-c to exit")
             while True:
                 if ser.in_waiting > 0:
-                    date_time_str, sensor, temp= read_arduino_data()
-                    payload = structure_payload(time, dspl, temp)
+                    self.date_time_str, self.sensor, self.temp= read_arduino_data()
+                    payload = structure_payload(self.time, self.dspl, self.temp)
                     client.send_message(msg)
                     print("Message Successfully sent")
         except KeyboardInterrupt:
