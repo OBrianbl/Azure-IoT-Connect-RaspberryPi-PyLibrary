@@ -7,13 +7,14 @@
      1: Microsoft Documentation: Connecting to Azure IoT Hub with Symmertric Key and Sending Telemetry Data from Pi to Iot Hub
      2: Python For Undergrad Engineers: Reading Serial Communications from Arduino
 """
-# import serial
-# import time
-# from azure.iot.device import IoTHubDeviceClient, Message
-# import json
-# import datetime
+import serial
+import time
+from azure.iot.device import IoTHubDeviceClient, Message
+import json
+import datetime
 
 
+from tempfile import tempdir
 from main import CONNECTION_STRING
 
 
@@ -23,14 +24,19 @@ class PiIotConnect:
     RaspberryPi will attempt connection with Azure IoT Hub by the given Connection String
     and transfer sensor data.
 
+    :param location: Is the location description for sensors (i.e. "AK" for Alaska)
+    :type location: str
+
+    :param web_sockets: Establishes the type of connection (i.e. use websockets), takes on two values True, False.
+    :type web_sockets: boolean
+
     :param CONNECTION_STRING: the connection string provisioned by Azure IoT Hub
     :type CONNECTION_STRING: str
-
-    :param
     """
 
-    def __init__(self,location, CONECTION_STRING):
+    def __init__(self,location, web_sockets, CONECTION_STRING):
         self.location = location
+        self.web_sockets = web_sockets
         self.CONNECTION_STRING = CONNECTION_STRING
 
     def iothub_client_init(self):
@@ -42,10 +48,33 @@ class PiIotConnect:
         :type CONNECTION_STRING: string
 
         """
-        client = IoTHubDeviceClient.create_from_connection_string(self.CONNECTION_STRING, websockets=True)
+        client = IoTHubDeviceClient.create_from_connection_string(self.CONNECTION_STRING, websockets=web_sockets)
         print("iothub-client-initiated")
         return client
 
+
+
+    def read_arduino_data(self):
+        self.date_time_str = datetime.datetime.now().isoformat()
+        tmp = str(ser.readline().rstrip(),"utf-8")
+        tmp = tmp.rstrip(tmp[-1])
+        self.sensor = self.location + tmp[0:8]
+        self.temp = float(tmp[9::])
+        return self.date_time_str, self.sensor, self.temp
+
+    def structure_payload(self, time, dspl, temp):
+        """
+        
+        param: msg: dictionary of time stamp, dspl (i.e. sensor type -- 1,2,3,etc), and temperature 
+                    from sensor restructured as JSON
+        type: msg: json 
+
+        """
+        msg = {"time" : time, "dspl" : dspl, "temp" : temp}
+        msg = Message(json.dumps(msg))
+        msg.content_encoding = "utf-8"
+        msg.content_type = "application/json"
+        return msg
 
     def pi_iothub_data_transfer(self):
         """
@@ -57,16 +86,8 @@ class PiIotConnect:
             print("sending data to IoT Hub, plress Ctrl-c to exit")
             while True:
                 if ser.in_waiting > 0:
-                    date_time_str = datetime.datetime.now().isoformat()
-                    tmp = str(ser.readline().rstrip(),"utf-8")
-                    tmp = tmp.rstrip(tmp[-1])
-                    sensor = self.location + tmp[0:8]
-                    temp = float(tmp[9::])
-                    print(date_time_str + " : " + sensor + " " + str(temp))
-                    msg = {"time" : date_time_str, "dspl" : sensor, "temp" : temp}
-                    msg = Message(json.dumps(msg))
-                    msg.content_encoding = "utf-8"
-                    msg.content_type = "application/json"
+                    date_time_str, sensor, temp= read_arduino_data()
+                    payload = structure_payload(time, dspl, temp)
                     client.send_message(msg)
                     print("Message Successfully sent")
         except KeyboardInterrupt:

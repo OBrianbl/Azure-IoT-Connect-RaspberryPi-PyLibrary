@@ -14,10 +14,12 @@ import json
 import datetime
 from raspberryPi_to_AzureIoT import 
 
+web_sockets = True
 location = "AK"
 CONNECTION_STRING = "<<CHANGE CONNECTION STRING TO ONE PROVIDED FROM AZURE IOT HUB - PRIMARY CONNECTION STRING TO USE SYMMETRIC KEY ENCRYPTION"
 ser=serial.Serial("/dev/ttyACM0",9600)
 ser.flush()
+
 
 while True:
     pi_iothub_data_transfer(location, CONNECTION STRING):
